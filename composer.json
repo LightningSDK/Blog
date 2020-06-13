@@ -1,0 +1,6 @@
+{
+  "name": "lightningsdk/blog",
+  "type": "library",
+  "description": "Blog module.",
+  "version": "1.0.0"
+}
