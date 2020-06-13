@@ -10,4 +10,14 @@ return [
             'admin/blog/categories' => lightningsdk\blog\Pages\Admin\Categories::class,
         ],
     ],
+    'menus' => [
+        'admin' => [
+            'Blog' => [
+                'children' => [
+                    'Posts' => 'admin/blog/edit',
+                    'Categories' => 'admin/blog/categories'
+                ],
+            ],
+        ],
+    ],
 ];
