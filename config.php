@@ -10,6 +10,11 @@ return [
             'admin/blog/categories' => lightningsdk\blog\Pages\Admin\Categories::class,
         ],
     ],
+    'markup' => [
+        'renderers' => [
+            'blog' => lightningsdk\blog\Pages\Blog::class,
+        ]
+    ],
     'menus' => [
         'admin' => [
             'Blog' => [
@@ -17,6 +22,13 @@ return [
                     'Posts' => 'admin/blog/edit',
                     'Categories' => 'admin/blog/categories'
                 ],
+            ],
+        ],
+    ],
+    'compiler' => [
+        'css' => [
+            'lightningsdk/blog' => [
+                'blog.scss' => 'lightning.css',
             ],
         ],
     ],

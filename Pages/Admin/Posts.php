@@ -7,12 +7,12 @@ use lightningsdk\core\Pages\Table;
 use lightningsdk\core\Tools\Navigation;
 use lightningsdk\core\Tools\Request;
 use lightningsdk\core\Tools\ClientUser;
-use lightningsdk\core\Model\BlogPost;
+use lightningsdk\blog\Model\Post;
 use lightningsdk\core\Tools\Template;
 
 class Posts extends Table {
 
-    const TABLE = BlogPost::TABLE;
+    const TABLE = Post::TABLE;
     const PRIMARY_KEY = 'blog_id';
 
     protected $trusted = true;
@@ -20,8 +20,8 @@ class Posts extends Table {
     protected $sort = ['time' => 'DESC'];
 
     protected $links = [
-        BlogPost::TABLE . BlogPost::CATEGORY_TABLE => [
-            'index' => BlogPost::TABLE . BlogPost::BLOG_CATEGORY_TABLE,
+        Post::TABLE . Post::CATEGORY_TABLE => [
+            'index' => Post::TABLE . Post::BLOG_CATEGORY_TABLE,
             'key' => 'cat_id',
             'display_column' => 'category',
             'list' => 'compact'
@@ -84,19 +84,10 @@ class Posts extends Table {
         $this->preset['url']['submit_function'] = function(&$output) {
             $output['url'] = Request::post('url', Request::TYPE_URL) ?: Request::post('title', Request::TYPE_URL);
         };
-        $this->preset['header_image'] = self::getHeaderImageSettings();
+        $this->preset['header_image'] = Post::getHeaderImageSettings();
 
         $this->action_fields['view']['html'] = function($row) {
             return '<a href="/blog/' . $row['url'] . '"><img src="/images/lightning/resume.png" /></a>';
         };
-    }
-
-    public static function getHeaderImageSettings() {
-        return [
-            'type' => 'image',
-            'browser' => true,
-            'container' => 'images',
-            'format' => 'jpg',
-        ];
     }
 }

@@ -12,7 +12,7 @@ use lightningsdk\core\Tools\Output;
 use lightningsdk\core\Tools\Request;
 use lightningsdk\core\Tools\Template;
 use lightningsdk\core\View\Page;
-use lightningsdk\core\Model\BlogPost;
+use lightningsdk\blog\Model\Post;
 
 /**
  * A page handler for viewing and editing the blog.
@@ -37,7 +37,7 @@ class Blog extends Page {
 
         if ($blog_id) {
             $blog->loadContentById($blog_id);
-            $this->setBlogMetadata(new BlogPost($blog->posts[0]));
+            $this->setBlogMetadata(new Post($blog->posts[0]));
         }
         elseif (!empty($path[0]) || count($path) > 2) {
             // This page num can be in index 2 (blog/page/#) or index 3 (blog/category/a-z/#).
@@ -58,7 +58,7 @@ class Blog extends Page {
                     $blog->page = array_pop($c_parts);
                 }
                 $blog->category = implode('-', $c_parts);
-                if ($cat = BlogPost::getCategory($blog->category)) {
+                if ($cat = Post::getCategory($blog->category)) {
                     $blog->category_url = $cat['cat_url'];
                     $blog->loadList('category', $cat['cat_id']);
                 } else {
@@ -71,13 +71,13 @@ class Blog extends Page {
                 if (empty($blog->id)) {
                     Output::http(404);
                 }
-                $this->setBlogMetadata(new BlogPost($blog->posts[0]));
+                $this->setBlogMetadata(new Post($blog->posts[0]));
             } elseif (!empty($path[1]) && $path[1] != 'page') {
                 $blog->loadContentByURL(preg_replace('/.htm$/', '', $path[1]));
                 if (empty($blog->id)) {
                     Output::http(404);
                 }
-                $this->setBlogMetadata(new BlogPost($blog->posts[0]));
+                $this->setBlogMetadata(new Post($blog->posts[0]));
             } elseif (!empty($blog->page)) {
                 $blog->loadList();
             }
@@ -106,13 +106,13 @@ class Blog extends Page {
      */
     public static function renderMarkup($options, $vars) {
         $template = new Template();
-        $blog = BlogPost::loadByID($options['id']);
+        $blog = Post::loadByID($options['id']);
         $template->set('blog', $blog);
         return $template->render(['blog-preview', 'lightningsdk/core'], true);
     }
 
     /**
-     * @param BlogPost $post
+     * @param Post $post
      */
     protected function setBlogMetaData($post) {
         $this->setMeta('title', $post->title);

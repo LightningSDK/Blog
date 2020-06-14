@@ -2,7 +2,7 @@
 
 namespace lightningsdk\blog\Model;
 
-use lightningsdk\blog\Pages\Admin\Posts;
+use lightningsdk\core\Model\BaseObject;
 use lightningsdk\core\Tools\Configuration;
 use lightningsdk\core\Tools\Database;
 use lightningsdk\core\Tools\IO\FileManager;
@@ -10,7 +10,7 @@ use lightningsdk\core\View\HTML;
 use lightningsdk\core\View\HTMLEditor\Markup;
 use lightningsdk\core\View\Text;
 
-class BlogPostOverridable extends BaseObject {
+class PostOverridable extends BaseObject {
     const TABLE = 'blog';
     const PRIMARY_KEY = 'blog_id';
 
@@ -37,7 +37,7 @@ class BlogPostOverridable extends BaseObject {
     public static function getRecent() {
         static $recent;
         if (empty($recent)) {
-            $recent = Database::getInstance()->select(BlogPost::TABLE, [], [], 'ORDER BY time DESC LIMIT 5');
+            $recent = Database::getInstance()->select(static::TABLE, [], [], 'ORDER BY time DESC LIMIT 5');
         }
         return $recent;
     }
@@ -63,12 +63,21 @@ class BlogPostOverridable extends BaseObject {
     public function getTrueHeaderImage() {
         if (!empty($this->header_image)) {
             // Image from upload.
-            $field = BlogPosts::getHeaderImageSettings();
+            $field = self::getHeaderImageSettings();
             $handler = empty($field['file_handler']) ? '' : $field['file_handler'];
             $fileHandler = FileManager::getFileHandler($handler, $field['container']);
             return $fileHandler->getWebURL($this->header_image);
         }
         return false;
+    }
+
+    public static function getHeaderImageSettings() {
+        return [
+            'type' => 'image',
+            'browser' => true,
+            'container' => 'images',
+            'format' => 'jpg',
+        ];
     }
 
     /**
@@ -137,7 +146,7 @@ class BlogPostOverridable extends BaseObject {
     }
 
     protected function getCatLink($cat) {
-        $categories = BlogPost::getAllCategoriesIndexed();
+        $categories = Post::getAllCategoriesIndexed();
         if (!empty($categories[$cat])) {
             return '/blog/category/' . $categories[$cat]['cat_url'];
         }
@@ -145,7 +154,7 @@ class BlogPostOverridable extends BaseObject {
     }
 
     protected function getCatName($cat) {
-        $categories = BlogPost::getAllCategoriesIndexed();
+        $categories = Post::getAllCategoriesIndexed();
         if (!empty($categories[$cat])) {
             return $categories[$cat]['category'];
         }

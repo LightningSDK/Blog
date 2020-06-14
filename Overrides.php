@@ -1,6 +1,6 @@
 <?php
 
-namespace \lightningsdk\blog\Model;
+namespace lightningsdk\blog\Model;
 
-class Blog extends \lightningsdk\core\Model\BlogOverridable {}
-class BlogPost extends \lightningsdk\core\Model\BlogPostOverridable {}
+class Blog extends lightningsdk\blog\Model\BlogOverridable {}
+class Post extends lightningsdk\blog\Model\PostOverridable {}
