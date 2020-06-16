@@ -18,20 +18,46 @@ class PostOverridable extends BaseObject {
     const BLOG_CATEGORY_TABLE = '_blog_category';
     const AUTHOR_TABLE = '_author';
 
-    public static function loadPosts($where = [], $join = [], $limit = '') {
-        return Database::getInstance()->selectAll(
-            [
-                'from' => self::TABLE,
-                'join' => array_merge($join, self::joinAuthorCatTables()),
+    public static function loadPosts($blogOrCatWhere = [], $authorWhere = [], $limit = 10, $page = 1) {
+        return Database::getInstance()->selectAllQuery(static::getQueryPost($blogOrCatWhere, $authorWhere, $limit, $page));
+    }
+
+    public static function countPosts($blogOrCatWhere = [], $authorWhere = []) {
+        return Database::getInstance()->countQuery(static::getQueryPost($blogOrCatWhere, $authorWhere));
+    }
+
+    protected static function getQueryPost($blogOrCatWhere = [], $authorWhere = [], $limit = 0, $page = 0) {
+        $query = [
+            'from' => [
+                'blog' => [
+                    'select' => [
+                        static::TABLE . '.*',
+                        'categories' => ['expression' => 'GROUP_CONCAT(blog_blog_category.cat_id)']
+                    ],
+                    'from' => static::TABLE,
+                    'where' => $blogOrCatWhere,
+                    'join' => [[
+                        'LEFT JOIN',
+                        static::TABLE . '_blog_category',
+                        'ON ' . self::TABLE . '_blog_category.blog_id = ' . self::TABLE . '.blog_id'
+                    ]],
+                    'group_by' => ['blog.blog_id'],
+                    'order_by' => ['blog.time' => 'DESC'],
+                ]
             ],
-            $where,
-            [
-                static::TABLE . '.*',
-                'blog_author.*',
-                'categories' => ['expression' => 'GROUP_CONCAT(blog_blog_category.cat_id)']
+            'join' => [
+                ['LEFT JOIN', 'blog_author', 'ON blog_author.user_id = ' . self::TABLE . '.user_id']
             ],
-            'GROUP BY ' . self::TABLE . '.blog_id ORDER BY time DESC ' . $limit
-        );
+            'where' => $authorWhere,
+        ];
+        if ($limit > 0) {
+            $query['limit'] = $limit;
+        }
+        if ($page > 0) {
+            $query['page'] = $page;
+        }
+
+        return $query;
     }
 
     public static function getRecent() {
@@ -40,19 +66,6 @@ class PostOverridable extends BaseObject {
             $recent = Database::getInstance()->select(static::TABLE, [], [], 'ORDER BY time DESC LIMIT 5');
         }
         return $recent;
-    }
-
-    protected static function joinAuthorCatTables() {
-        return [
-            // Join categories
-            [
-                'LEFT JOIN',
-                static::TABLE . '_blog_category',
-                'ON ' . self::TABLE . '_blog_category.blog_id = ' . self::TABLE . '.blog_id'
-            ],
-            // Join author
-            ['LEFT JOIN', 'blog_author', 'ON blog_author.user_id = ' . self::TABLE . '.user_id']
-        ];
     }
 
     /**
@@ -141,64 +154,8 @@ class PostOverridable extends BaseObject {
     public function renderCategoryList() {
         $categories = explode(',', $this->categories);
         foreach ($categories as $cat) {
-            echo '<li><a href="' . $this->getCatLink($cat) . '">' . $this->getCatName($cat) . '</a></li>';
+            $cat = Category::getCatFromAll($cat);
+            echo '<li><a href="' . $cat->cat_url . '">' . $cat->category . '</a></li>';
         }
-    }
-
-    protected function getCatLink($cat) {
-        $categories = Post::getAllCategoriesIndexed();
-        if (!empty($categories[$cat])) {
-            return '/blog/category/' . $categories[$cat]['cat_url'];
-        }
-        return null;
-    }
-
-    protected function getCatName($cat) {
-        $categories = Post::getAllCategoriesIndexed();
-        if (!empty($categories[$cat])) {
-            return $categories[$cat]['category'];
-        }
-        return null;
-    }
-
-    public static function getCategory($search_value) {
-        return Database::getInstance()->selectRow(
-            self::TABLE . self::CATEGORY_TABLE,
-            ['cat_url' => ['LIKE', $search_value]]
-        );
-    }
-
-    public static function getAllCategoriesIndexed() {
-        static $categories = [];
-
-        if (empty($categories)) {
-            $categories = Database::getInstance()->selectAllQuery([
-                'from' => self::TABLE . self::CATEGORY_TABLE,
-                'indexed_by' => 'cat_id',
-                'order_by' => ['category' => 'ASC'],
-            ]);
-        }
-
-        return $categories;
-    }
-
-    public static function getAllCategories($order = 'count', $sort_direction = 'DESC') {
-        static $categories = [];
-        if (empty($categories[$order][$sort_direction])) {
-            $categories[$order][$sort_direction] = Database::getInstance()->selectAll(
-                [
-                    'from' => self::TABLE . self::BLOG_CATEGORY_TABLE,
-                    'join' => ['JOIN', self::TABLE . self::CATEGORY_TABLE, 'USING (cat_id)'],
-                ],
-                [],
-                [
-                    'count' => ['expression' => 'COUNT(*)'],
-                    'category',
-                    'cat_url'
-                ],
-                'GROUP BY cat_id ORDER BY `' . $order . '` ' . $sort_direction . ' LIMIT 10'
-            );
-        }
-        return $categories[$order][$sort_direction];
     }
 }

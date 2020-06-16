@@ -65,47 +65,28 @@ class BlogOverridable extends Singleton {
 
     public function loadList($search_field = null, $search_value = null) {
         $this->isList = true;
-        $join = [];
-        $where = [];
+        $blogWhere = [];
+        $authorWhere = [];
         if ($this->y != 0) {
             if ($this->m > 0) {
                 // SELECT A MONTH
-                $where['time'] = ['BETWEEN', mktime(0,0,0,$this->m,1,$this->y), mktime(0,0,0,$this->m+1,1,$this->y)];
+                $blogWhere['time'] = ['BETWEEN', mktime(0,0,0,$this->m,1,$this->y), mktime(0,0,0,$this->m+1,1,$this->y)];
             } else {
-                $where['time'] = ['BETWEEN', mktime(0,0,0,1,1,$this->y), mktime(0,0,0,1,1,$this->y+1)];
+                $blogWhere['time'] = ['BETWEEN', mktime(0,0,0,1,1,$this->y), mktime(0,0,0,1,1,$this->y+1)];
             }
         }
 
         elseif ($search_field == 'category') {
-            $join[] = [
-                'JOIN',
-                ['cat_search' => Post::TABLE . '_blog_category'],
-                'ON cat_search.blog_id = ' . Post::TABLE . '.blog_id'
-            ];
-            $where['cat_search.cat_id'] = $search_value;
+            $blogWhere['blog_blog_category.cat_id'] = $search_value;
         }
 
         elseif ($search_field == 'author') {
-            $where[Post::TABLE . '.user_id'] = $search_value;
+            $authorWhere['blog.user_id'] = $search_value;
         }
 
-        $limit = '';
-        if ($this->list_per_page > 0) {
-            $limit = " LIMIT " . intval(($this->page -1) * $this->list_per_page) . ", {$this->list_per_page}";
-        }
+        $this->posts = Post::loadPosts($blogWhere, $authorWhere, $this->list_per_page, $this->page);
 
-        $this->posts = Post::loadPosts($where, $join, $limit);
-
-        $this->loadPostCount($where, $join);
-    }
-
-    protected function loadPostCount($where, $join) {
-        $this->post_count = Database::getInstance()->count([
-                'from' => Post::TABLE,
-                'join' => $join,
-            ],
-            $where
-        );
+        $this->post_count = Post::countPosts($blogWhere, $authorWhere);
     }
 
     protected function loadCategories($force = false) {
@@ -153,16 +134,6 @@ class BlogOverridable extends Singleton {
             foreach($list as $r) {
                 echo "<li><a href='/blog/{$r['url']}' {$target}>{$r['title']}</a></li>";
             }
-            echo "</ul>";
-        }
-    }
-
-    public function renderCategoriesList() {
-        $list = Post::getAllCategories();
-        if (!empty($list)) {
-            echo "<ul>";
-            foreach($list as $r)
-                echo "<li><a href='/blog/category/". $r['cat_url'] . "'>{$r['category']}</a> ({$r['count']})</li>";
             echo "</ul>";
         }
     }

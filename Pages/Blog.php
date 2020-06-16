@@ -7,6 +7,7 @@
 namespace lightningsdk\blog\Pages;
 
 use lightningsdk\blog\Model\Blog as BlogModel;
+use lightningsdk\blog\Model\Category;
 use lightningsdk\core\Model\URL;
 use lightningsdk\core\Tools\Output;
 use lightningsdk\core\Tools\Request;
@@ -22,7 +23,7 @@ use lightningsdk\blog\Model\Post;
 class Blog extends Page {
 
     protected $nav = 'blog';
-    protected $page = ['blog', 'lightningsdk/core'];
+    protected $page = ['blog', 'lightningsdk/blog'];
     protected $share = false;
 
     protected function hasAccess() {
@@ -95,6 +96,7 @@ class Blog extends Page {
             // If there is more than one, we show a list with short bodies.
             $blog->shorten_body = true;
         }
+        $template->set('blog', $blog);
     }
 
     /**
@@ -106,9 +108,34 @@ class Blog extends Page {
      */
     public static function renderMarkup($options, $vars) {
         $template = new Template();
-        $blog = Post::loadByID($options['id']);
-        $template->set('blog', $blog);
-        return $template->render(['blog-preview', 'lightningsdk/core'], true);
+        if (!empty($options['id'])) {
+            $blog = Post::loadByID($options['id']);
+            $template->set('blog', $blog);
+            return $template->render(['blog-preview', 'lightningsdk/blog'], true);
+        }
+        $limit = $options['limit'] ?? 10;
+        $output = '';
+        if (array_key_exists('recent', $options)) {
+            // Show recent list
+            $recent = Post::getRecent();
+            $output = '<div><ul>';
+            foreach ($recent as $p) {
+                $p = new Post($p);
+                $output .= "<li><a href='{$p->getLink()}'>{$p->title}</a></li>";
+            }
+            $output .= '</ul></div>';
+        }
+        elseif (array_key_exists('authors',  $options)) {
+        }
+        elseif (array_key_exists('categories', $options)) {
+            $categories = Category::getAllCategories();
+            $output = '<div><ul>';
+            foreach ($categories as $c) {
+                $output .= "<li><a href='/blog/category/". $c['cat_url'] . "'>{$c['category']}</a> ({$c['count']})</li>";
+            }
+            $output .= '</ul></div>';
+        }
+        return $output;
     }
 
     /**

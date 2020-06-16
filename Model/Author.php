@@ -1,7 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: dab
- * Date: 3/29/16
- * Time: 7:32 PM
- */
+
+namespace lightningsdk\blog\Model;
+
+use lightningsdk\core\Model\BaseObject;
+
+class Author extends BaseObject {
+    public static function getAllAuthors() {
+    }
+}
