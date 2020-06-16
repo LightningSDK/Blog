@@ -38,7 +38,7 @@ class BlogOverridable extends Singleton {
     public function getAuthorID($search_value) {
         return Database::getInstance()->selectField(
             'user_id',
-            BlogPost::TABLE . BlogPost::AUTHOR_TABLE,
+            Post::TABLE . Post::AUTHOR_TABLE,
             ['author_url' => ['LIKE', $search_value]]
         );
     }
@@ -49,7 +49,7 @@ class BlogOverridable extends Singleton {
 
     public function loadContentByURL($url) {
         $this->isList = false;
-        $this->posts = BlogPost::loadPosts(['url' => $url]);
+        $this->posts = Post::loadPosts(['url' => $url]);
         if (!empty($this->posts)) {
             $this->id = $this->posts[0]['blog_id'];
         }
@@ -57,7 +57,7 @@ class BlogOverridable extends Singleton {
 
     public function loadContentById($id) {
         $this->isList = false;
-        $this->posts = BlogPost::loadPosts(['blog_id' => $id]);
+        $this->posts = Post::loadPosts(['blog_id' => $id]);
         if (!empty($this->posts)) {
             $this->id = $this->posts[0]['blog_id'];
         }
@@ -79,14 +79,14 @@ class BlogOverridable extends Singleton {
         elseif ($search_field == 'category') {
             $join[] = [
                 'JOIN',
-                ['cat_search' => BlogPost::TABLE . '_blog_category'],
-                'ON cat_search.blog_id = ' . BlogPost::TABLE . '.blog_id'
+                ['cat_search' => Post::TABLE . '_blog_category'],
+                'ON cat_search.blog_id = ' . Post::TABLE . '.blog_id'
             ];
             $where['cat_search.cat_id'] = $search_value;
         }
 
         elseif ($search_field == 'author') {
-            $where[BlogPost::TABLE . '.user_id'] = $search_value;
+            $where[Post::TABLE . '.user_id'] = $search_value;
         }
 
         $limit = '';
@@ -94,14 +94,14 @@ class BlogOverridable extends Singleton {
             $limit = " LIMIT " . intval(($this->page -1) * $this->list_per_page) . ", {$this->list_per_page}";
         }
 
-        $this->posts = BlogPost::loadPosts($where, $join, $limit);
+        $this->posts = Post::loadPosts($where, $join, $limit);
 
         $this->loadPostCount($where, $join);
     }
 
     protected function loadPostCount($where, $join) {
         $this->post_count = Database::getInstance()->count([
-                'from' => BlogPost::TABLE,
+                'from' => Post::TABLE,
                 'join' => $join,
             ],
             $where
@@ -146,7 +146,7 @@ class BlogOverridable extends Singleton {
     }
 
     public function renderRecentList($remote=false) {
-        $list = BlogPost::getRecent();
+        $list = Post::getRecent();
         $target = $remote ? "target='_blank'" : '';
         if (!empty($list)) {
             echo "<ul>";
@@ -158,7 +158,7 @@ class BlogOverridable extends Singleton {
     }
 
     public function renderCategoriesList() {
-        $list = BlogPost::getAllCategories();
+        $list = Post::getAllCategories();
         if (!empty($list)) {
             echo "<ul>";
             foreach($list as $r)
@@ -179,7 +179,7 @@ class BlogOverridable extends Singleton {
     public function loadBlogURL($url) {
         $this->isList = false;
         $url = preg_replace('/.htm$/', '', $url);
-        $this->posts = BlogPost::loadPosts(['url' => $url]);
+        $this->posts = Post::loadPosts(['url' => $url]);
         if ($this->posts) {
             $this->id = $this->posts[0]['blog_id'];
         } else {
@@ -199,7 +199,7 @@ class BlogOverridable extends Singleton {
      */
     public function loadBlogID($id) {
         $this->isList = false;
-        $this->posts = BlogPost::loadPosts([BlogPost::TABLE.'.blog_id' => $id]);
+        $this->posts = Post::loadPosts([Post::TABLE.'.blog_id' => $id]);
         if ($this->posts) {
             $this->id = $this->posts[0]->id;
         } else {
@@ -210,11 +210,11 @@ class BlogOverridable extends Singleton {
     public static function getSitemapUrls() {
         $web_root = Configuration::get('web_root');
         $blogs = Database::getInstance()->select([
-            'from' => BlogPost::TABLE,
+            'from' => Post::TABLE,
         ],
             [],
             [
-                [BlogPost::TABLE => ['blog_time' => 'time']],
+                [Post::TABLE => ['blog_time' => 'time']],
                 'url',
             ],
             'GROUP BY blog_id'

@@ -32,4 +32,7 @@ return [
             ],
         ],
     ],
+    'sitemap' => [
+        'blog' => \lightningsdk\blog\Model\Blog::class,
+    ],
 ];
