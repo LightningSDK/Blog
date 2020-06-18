@@ -1,8 +1,9 @@
 <div class="blog-container">
     <?php
     use lightningsdk\core\Tools\ClientUser;
-    use lightningsdk\core\View\SocialMedia\Links;
+    use lightningsdk\core\View\Facebook\Comments;
     use lightningsdk\blog\Model\Post;
+    use lightningsdk\core\View\SocialMedia\Share;
 
     $user = ClientUser::getInstance();
 
@@ -58,9 +59,9 @@
                             </div>
                         </div>
                     <?php endif; ?>
-                    <?= Links::render($post->getURL()); ?>
+                    <?= Share::render($post->getURL()); ?>
                     <?php if (!$blog->isList()): ?>
-                        <?= \lightningsdk\core\View\Facebook\Comments::render(); ?>
+                        <?= Comments::render(); ?>
                     <?php endif; ?>
                 </div>
             </div>
