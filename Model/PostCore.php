@@ -155,7 +155,7 @@ class PostCore extends BaseObject {
         $categories = explode(',', $this->categories);
         foreach ($categories as $cat) {
             $cat = Category::getCatFromAll($cat);
-            echo '<li><a href="' . $cat->cat_url . '">' . $cat->category . '</a></li>';
+            echo '<li><a href="/blog/cactegory' . $cat->cat_url . '">' . $cat->category . '</a></li>';
         }
     }
 }
