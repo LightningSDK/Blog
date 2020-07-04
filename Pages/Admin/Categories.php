@@ -9,6 +9,7 @@ use lightningsdk\core\Tools\ClientUser;
 class Categories extends Table {
 
     const TABLE = 'blog_category';
+    const PRIMARY_KEY = 'cat_id';
 
     public function hasAccess() {
         ClientUser::requireAdmin();
